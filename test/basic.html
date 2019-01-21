@@ -6,10 +6,10 @@
 
     <title>mcd-multi-select test</title>
 
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../wct-browser-legacy/browser.js"></script>
     
-    <link rel="import" href="../mcd-multi-select.html">
+    <script type="module" src="../mcd-multi-select.js"></script>
   </head>
   <body>
     <test-fixture id="BasicFixture">
@@ -18,62 +18,64 @@
       </template>
     </test-fixture>
     
-    <script>
-      suite('mcd-multi-select', () => {
-        var basicFixture, multiselect;
+    <script type="module">
+import '../mcd-multi-select.js';
+import { microTask } from '@polymer/polymer/lib/utils/async.js';
+suite('mcd-multi-select', () => {
+  var basicFixture, multiselect;
 
-        setup(() => {
-          basicFixture = fixture('BasicFixture');
-          multiselect = document.querySelector('mcd-multi-select');
-        });
+  setup(() => {
+    basicFixture = fixture('BasicFixture');
+    multiselect = document.querySelector('mcd-multi-select');
+  });
+  
+  test('instantiating mcd-multi-select.', () => {
+    assert.equal(MCDMultiSelect.is, 'mcd-multi-select');
+  });
+
+  test('Opening and closing the selections dialog', () => {
+    assert.equal(multiselect.opened, false, 'The selections dialog is shown when the element instantiated.');
+
+    multiselect.open();
+    assert.equal(basicFixture.opened, true);
+
+    multiselect.close();
+    assert.equal(multiselect.opened, false);
+  });
+
+  test('Filtering array of objects', function(done) {
+    multiselect.set('items', ['a', 'b', 'c']);
+    microTask.run(function() {
+      var arr = multiselect.shadowRoot.querySelectorAll('paper-checkbox');
+      assert.equal(arr.length, 3);
+      
+      multiselect.set('filterValue', 'b');
+      microTask.run(function() {
+        var arr = multiselect.shadowRoot.querySelectorAll('paper-checkbox');
+        assert.equal(arr.length, 1);
+        assert.equal(arr[0].value, 'b');
+        done();
+      });
+    });
+  });
+
+  test('Toggle selections', function(done) {
+    multiselect.set('items', ['a', 'b', 'c']);
+    microTask.run(function() {
+      multiselect.toggleButtonClicked();
+      microTask.run(function() {
+        assert.deepEqual(multiselect.selected, multiselect.items);
         
-        test('instantiating mcd-multi-select.', () => {
-          assert.equal(MCDMultiSelect.is, 'mcd-multi-select');
-        });
-
-        test('Opening and closing the selections dialog', () => {
-          assert.equal(multiselect.opened, false, 'The selections dialog is shown when the element instantiated.');
-
-          multiselect.open();
-          assert.equal(basicFixture.opened, true);
-
-          multiselect.close();
-          assert.equal(multiselect.opened, false);
-        });
-
-        test('Filtering array of objects', function(done) {
-          multiselect.set('items', ['a', 'b', 'c']);
-          Polymer.Async.microTask.run(function() {
-            var arr = multiselect.shadowRoot.querySelectorAll('paper-checkbox');
-            assert.equal(arr.length, 3);
-            
-            multiselect.set('filterValue', 'b');
-            Polymer.Async.microTask.run(function() {
-              var arr = multiselect.shadowRoot.querySelectorAll('paper-checkbox');
-              assert.equal(arr.length, 1);
-              assert.equal(arr[0].value, 'b');
-              done();
-            });
-          });
-        });
-
-        test('Toggle selections', function(done) {
-          multiselect.set('items', ['a', 'b', 'c']);
-          Polymer.Async.microTask.run(function() {
-            multiselect.toggleButtonClicked();
-            Polymer.Async.microTask.run(function() {
-              assert.deepEqual(multiselect.selected, multiselect.items);
-              
-              multiselect.toggleButtonClicked();
-              Polymer.Async.microTask.run(function() {
-                assert.deepEqual(multiselect.selected, []);
-                done();
-              });
-            });
-          });
+        multiselect.toggleButtonClicked();
+        microTask.run(function() {
+          assert.deepEqual(multiselect.selected, []);
+          done();
         });
       });
-    </script>
+    });
+  });
+});
+</script>
 
   </body>
 </html>

@@ -6,36 +6,52 @@
 
     <title>mcd-multi-select demo</title>
 
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
 
-    <link rel="import" href="../../polymer/polymer.html">
-    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
-    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-    <link rel="import" href="../mcd-multi-select.html">
+    <script type="module" src="../../@polymer/polymer/polymer-legacy.js"></script>
+    <script type="module" src="../../@polymer/iron-demo-helpers/demo-pages-shared-styles.js"></script>
+    <script type="module" src="../../@polymer/iron-demo-helpers/demo-snippet.js"></script>
+    <script type="module" src="../mcd-multi-select.js"></script>
 
-    <custom-style>
+    <!-- FIXME(polymer-modulizer):
+        These imperative modules that innerHTML your HTML are
+        a hacky way to be sure that any mixins in included style
+        modules are ready before any elements that reference them are
+        instantiated, otherwise the CSS @apply mixin polyfill won't be
+        able to expand the underlying CSS custom properties.
+        See: https://github.com/Polymer/polymer-modulizer/issues/154
+        -->
+    <script type="module">
+const $_documentContainer = document.createElement('template');
+
+$_documentContainer.innerHTML = `<custom-style>
       <style is="custom-style" include="demo-pages-shared-styles"></style>
-    </custom-style>
+    </custom-style>`;
+
+document.body.appendChild($_documentContainer.content);
+</script>
   </head>
   <body>
-    <div class="vertical-section-container centered">
+    <script type="module">
+const $_documentContainer = document.createElement('template');
+
+$_documentContainer.innerHTML = `
+<div class="vertical-section-container centered">
       <mcd-multi-select-demo id="demo1">
         <h3>Basic mcd-multi-select demo</h3>
         <demo-snippet>
           <template>
-            <mcd-multi-select
-              label="Favorites"
-              items="[[items]]">
+            <mcd-multi-select label="Favorites" items="[[items]]">
             </mcd-multi-select>
 
-            <paper-button id="button" onclick="getSelected()" style="margin:8px 0 14px" raised>Get Selected</paper-button>
+            <paper-button id="button" onclick="getSelected()" style="margin:8px 0 14px" raised="">Get Selected</paper-button>
             <div id="items"></div>
             <script>
               function getSelected() {
                 console.dir(multiselectBasic.value);
                 document.getElementById('items').innerHTML = JSON.stringify(multiselectBasic.value);
               }
-            </script>
+            /script>
           </template>
         </demo-snippet>
       </mcd-multi-select-demo>
@@ -44,56 +60,62 @@
         <h3>Support right-to-left languages</h3>
         <demo-snippet id="demo2">
           <template>
-            <mcd-multi-select
-              label="المفضلة"
-              items="[[items]]"
-              placeholder="اختر الطعام المفضل لديك..."
-              filter-placeholder='ابحث...'
-              dismiss-title='إخفاء'
-              toggle-title='تبديل الكل'
-              rtl>
+            <mcd-multi-select label="المفضلة" items="[[items]]" placeholder="اختر الطعام المفضل لديك..." filter-placeholder="ابحث..." dismiss-title="إخفاء" toggle-title="تبديل الكل" rtl="">
+            </mcd-multi-select>
+          </template>
+        </demo-snippet>
+      </mcd-multi-select-demo>      
+    </div>`;
+
+document.body.appendChild($_documentContainer.content);
+</script>            rtl>
             </mcd-multi-select>
           </template>
         </demo-snippet>
       </mcd-multi-select-demo>      
     </div>
     
-    <script>
-      class MCDMultiSelectDemo extends Polymer.Element {
-        static get is() { return 'mcd-multi-select-demo' }
+    <script type="module">
+import '@polymer/polymer/polymer-legacy.js';
+import '@polymer/iron-demo-helpers/demo-pages-shared-styles.js';
+import '@polymer/iron-demo-helpers/demo-snippet.js';
+import '../mcd-multi-select.js';
+import { PolymerElement } from '@polymer/polymer/polymer-element.js';
+class MCDMultiSelectDemo extends PolymerElement {
+  static get is() { return 'mcd-multi-select-demo' }
 
-        static get items() {
-          return [
-            'Apple','Apricot','Avocado','Banana','Blackberry',
-            'Blueberry','Cherry','Coconut','Cranberry','Cucumber',
-            'Grape','Grapefruit','Guava','Jackfruit','Lemon',
-            'Mango','Olive','Orange','Peach','Pineapple',
-            'Pomegranate','Pomelo','Raspberry','Strawberry'
-          ]
-        }
-        
-        static get itemsAR() {
-          return [
-            'تفاح','مشمش','أفوكادو','موز','بلاك بيري',
-            'توت بري','كرز','جوز الهند','توت بري','خيار',
-            'عنب','جريب فروت','جوافة','الجاك فروت','ليمون',
-            'مانجو','زيتون','برتقال','خوخ','أناناس','رمان',
-            'بوميلي','العليق','فراولة'
-          ]
-        }
-      }
+  static get items() {
+    return [
+      'Apple','Apricot','Avocado','Banana','Blackberry',
+      'Blueberry','Cherry','Coconut','Cranberry','Cucumber',
+      'Grape','Grapefruit','Guava','Jackfruit','Lemon',
+      'Mango','Olive','Orange','Peach','Pineapple',
+      'Pomegranate','Pomelo','Raspberry','Strawberry'
+    ]
+  }
+  
+  static get itemsAR() {
+    return [
+      'تفاح','مشمش','أفوكادو','موز','بلاك بيري',
+      'توت بري','كرز','جوز الهند','توت بري','خيار',
+      'عنب','جريب فروت','جوافة','الجاك فروت','ليمون',
+      'مانجو','زيتون','برتقال','خوخ','أناناس','رمان',
+      'بوميلي','العليق','فراولة'
+    ]
+  }
+}
 
-      window.customElements.define(MCDMultiSelectDemo.is, MCDMultiSelectDemo);      
-      
-      // Basic Demo
-      const demo1 = document.querySelector('#demo1');
-      const multiselectBasic = demo1.querySelector('mcd-multi-select');
-      multiselectBasic.items = MCDMultiSelectDemo.items;
+window.customElements.define(MCDMultiSelectDemo.is, MCDMultiSelectDemo);
 
-      // RTL Demo
-      const demo2 = document.querySelector('#demo2');
-      const multiselectRTL = demo2.querySelector('mcd-multi-select');
-      multiselectRTL.items = MCDMultiSelectDemo.itemsAR;
-    </script>
+// Basic Demo
+const demo1 = document.querySelector('#demo1');
+const multiselectBasic = demo1.querySelector('mcd-multi-select');
+multiselectBasic.items = MCDMultiSelectDemo.items;
+
+// RTL Demo
+const demo2 = document.querySelector('#demo2');
+const multiselectRTL = demo2.querySelector('mcd-multi-select');
+multiselectRTL.items = MCDMultiSelectDemo.itemsAR;
+</script>
   </body>
 </html>

@@ -1,11 +1,4 @@
-<link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../iron-icons/iron-icons.html">
-<link rel="import" href="../paper-input/paper-input.html">
-<link rel="import" href="../paper-button/paper-button.html">
-<link rel="import" href="../paper-checkbox/paper-checkbox.html">
-<link rel="import" href="../paper-dialog-scrollable/paper-dialog-scrollable.html">
-
-<!-- 
+/* 
 `<mcd-multi-select>` enables multi-selection from a given set of items. You can use the `selected-items` attribute to retrieve the items selected by user.
 
     <mcd-multi-select 
@@ -53,9 +46,33 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- -->
- <dom-module id="mcd-multi-select">
-  <template>
+ */
+/*
+  FIXME(polymer-modulizer): the above comments were extracted
+  from HTML and may be out of place here. Review them and
+  then delete this comment!
+*/
+import { PolymerElement } from '@polymer/polymer/polymer-element.js';
+
+import '@polymer/iron-icons/iron-icons.js';
+import '@polymer/paper-input/paper-input.js';
+import '@polymer/paper-button/paper-button.js';
+import '@polymer/paper-checkbox/paper-checkbox.js';
+import '@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
+import { html } from '@polymer/polymer/lib/utils/html-tag.js';
+import { timeOut, microTask } from '@polymer/polymer/lib/utils/async.js';
+import { IronA11yKeysBehavior } from '@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
+/**
+ * `mcd-multi-select`
+ * Enables multi-selection from given set of items.
+ *
+ * @customElement
+ * @polymer
+ * @demo demo/index.html
+ */
+class MCDMultiSelect extends PolymerElement {
+  static get template() {
+    return html`
     <style>
       :host {
         display: flex;
@@ -299,11 +316,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
           
           <paper-dialog-scrollable class="flexchild">
             <template is="dom-repeat" items="{{items}}" filter="{{_filter(filterValue)}}">
-              <paper-checkbox
-                on-change="_checkboxToggled"
-                value="{{getValue(item)}}"
-                checked="{{_checkboxState(item)}}"
-                noink>
+              <paper-checkbox on-change="_checkboxToggled" value="{{getValue(item)}}" checked="{{_checkboxState(item)}}" noink="">
                 {{getValue(item)}}
               </paper-checkbox>
             </template>
@@ -316,295 +329,284 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         </div>
       </div>
     </span>      
-  </template>
+`;
+  }
 
-    <script>
+  static get is() { return 'mcd-multi-select'; }
+  static get properties() {
+    return {
+
+      /** Duration of fade in/out. */
+      _animationDuration: {
+        type: Number,
+        value: 140
+      },
+
+      /** Whether the dialog is opened or not. */
+      opened: {
+        type: Boolean,
+        value: false
+      },
+      
+      /** The label to be shown to user. */
+      label: {
+        type: String,
+        value: 'Label'
+      },
+
+      /** 
+        * The placeholder shown to the user in case he didn't select any item.
+        * The 'label' property will be used in case the placeholder was not specified.
+        */
+      placeholder: {
+        type: String,
+        value: ''
+      },
+      
+      /** An array containing items from which selection will be made. */
+      items: {
+        type: Object,
+        value: []
+      },
+
       /**
-       * `mcd-multi-select`
-       * Enables multi-selection from given set of items.
-       *
-       * @customElement
-       * @polymer
-       * @demo demo/index.html
+       * Value property to be used for each item, in case the user passed an array of objects.
        */
-      class MCDMultiSelect extends Polymer.Element {
-        static get is() { return 'mcd-multi-select'; }
-        static get properties() {
-          return {
+      valueProperty: {
+        type: String,
+        value: 'value'
+      },
 
-            /** Duration of fade in/out. */
-            _animationDuration: {
-              type: Number,
-              value: 140
-            },
+      /** Array of selected items made by the user */
+      selectedItems: {
+        type: Array,
+        value: []
+      },
 
-            /** Whether the dialog is opened or not. */
-            opened: {
-              type: Boolean,
-              value: false
-            },
-            
-            /** The label to be shown to user. */
-            label: {
-              type: String,
-              value: 'Label'
-            },
+      /** Value used to filter data. */
+      filterValue: {
+        type: String,
+        value: "",
+        notify: true
+      },
+      
+      /** Placeholder for the filtering input field. */
+      filterPlaceholder: {
+        type: String,
+        value: "Search..."
+      },
+      
+      /** Title of the dismiss button. */
+      dismissTitle: {
+        type: String,
+        value: "Dismiss"
+      },
+      
+      /** Title of the toggle-all button. */
+      toggleTitle: {
+        type: String,
+        value: "Toggle All"
+      },
+      
+      /** Change interface for right-to-left languages, if true. */
+      rtl: {
+        type: Boolean,
+        value: false,
+      }
+    };
+  }
 
-            /** 
-              * The placeholder shown to the user in case he didn't select any item.
-              * The 'label' property will be used in case the placeholder was not specified.
-              */
-            placeholder: {
-              type: String,
-              value: ''
-            },
-            
-            /** An array containing items from which selection will be made. */
-            items: {
-              type: Object,
-              value: []
-            },
+  static get observers() {
+    return [
+      '_onSelectedItemsChanged(selectedItems, selectedItems.*)'
+    ]
+  }
 
-            /**
-             * Value property to be used for each item, in case the user passed an array of objects.
-             */
-            valueProperty: {
-              type: String,
-              value: 'value'
-            },
+  ready() {
+    super.ready();
+    this.dispatchEvent(new CustomEvent('test-event', {detail: 'tested!'}));
+    this.addEventListener('keydown', this._onKeydown.bind(this));
+    
+    if (!this.placeholder || this.placeholder == "") {
+      const prefix = this.rtl ? 'اختر' : 'Choose';
+      this.placeholder = `${prefix} ${this.label}...`;
+    }
+    
+    if (this.rtl) {
+      this.$.container.setAttribute('rtl', true);
+      console.error("Fix checkmark and ripple offsets inside paper-checkbox.");
+      // TODO: Fix checkmark and ripple offsets inside paper-checkbox
+    }
+  }
 
-            /** Array of selected items made by the user */
-            selectedItems: {
-              type: Array,
-              value: []
-            },
+  /** Opens the element. */
+  open() {
+    // do nothing if it is opened
+    if (this.opened) return;
+    
+    // reset the filter value.
+    this.filterValue = "";
 
-            /** Value used to filter data. */
-            filterValue: {
-              type: String,
-              value: "",
-              notify: true
-            },
-            
-            /** Placeholder for the filtering input field. */
-            filterPlaceholder: {
-              type: String,
-              value: "Search..."
-            },
-            
-            /** Title of the dismiss button. */
-            dismissTitle: {
-              type: String,
-              value: "Dismiss"
-            },
-            
-            /** Title of the toggle-all button. */
-            toggleTitle: {
-              type: String,
-              value: "Toggle All"
-            },
-            
-            /** Change interface for right-to-left languages, if true. */
-            rtl: {
-              type: Boolean,
-              value: false,
-            }
-          };
-        }
+    // fade-in the selections dialog
+    this.$.dialog.style.visibility = "visible";
+    this.$.dialog.style.opacity = 1;
+    this.opened = true;
+    
+    // focus on the filter input field when the dialog opens.
+    this.$.filterField.focus();
+  }
 
-        static get observers() {
-          return [
-            '_onSelectedItemsChanged(selectedItems, selectedItems.*)'
-          ]
-        }
+  /** Closes the element. */
+  close() {
+    // do nothing if it is not opened.
+    if (!this.opened) return;
 
-        ready() {
-          super.ready();
-          this.dispatchEvent(new CustomEvent('test-event', {detail: 'tested!'}));
-          this.addEventListener('keydown', this._onKeydown.bind(this));
-          
-          if (!this.placeholder || this.placeholder == "") {
-            const prefix = this.rtl ? 'اختر' : 'Choose';
-            this.placeholder = `${prefix} ${this.label}...`;
-          }
-          
-          if (this.rtl) {
-            this.$.container.setAttribute('rtl', true);
-            console.error("Fix checkmark and ripple offsets inside paper-checkbox.");
-            // TODO: Fix checkmark and ripple offsets inside paper-checkbox
-          }
-        }
+    // fade-out the selections dialog.
+    this.$.dialog.style.opacity = 0;
+    this.opened = false;
+    
+    // fully hide the dialog when the fading animations end. 
+    timeOut.run(function() {
+      this.$.dialog.style.visibility = "hidden";
+    }.bind(this), this._animationDuration);
+  }
 
-        /** Opens the element. */
-        open() {
-          // do nothing if it is opened
-          if (this.opened) return;
-          
-          // reset the filter value.
+  /** Retrieve the selected items. */
+  get value() {
+    return this.selectedItems;
+  }
+
+  /** Called every time the selected items changed to show or hide the placeholder. */
+  _onSelectedItemsChanged(selectedItems) {
+    if (selectedItems.length > 0) {
+      if (this.$.placeholder.style.display != 'none') {
+        this.$.placeholder.style.display = 'none';
+      }
+    } else {
+      if (this.$.placeholder.style.display == 'none') {
+        this.$.placeholder.style.display = 'block';
+      }
+    }
+  }
+
+  /** Toggles selections, e.i either selects all items or none. */
+  toggleButtonClicked() {
+    if (this.selectedItems.length === this.items.length) {
+      this.set("selectedItems", []);
+    } else {
+      this.set("selectedItems", this.items);
+    }
+
+    if (this.filterValue != "") {
+      this.filterValue = "";
+    } else {
+      // Reloads "dom-repeat".
+      // TODO: Improve code related to reloading 'dom-repeat'.
+      console.warn("Improve code related to reloading 'dom-repeat'.");
+      microTask.run(function() {
+        this.filterValue = "-";
+        microTask.run(function() {
           this.filterValue = "";
+        }.bind(this));
+      }.bind(this));
+    }
+  }
 
-          // fade-in the selections dialog
-          this.$.dialog.style.visibility = "visible";
-          this.$.dialog.style.opacity = 1;
-          this.opened = true;
-          
-          // focus on the filter input field when the dialog opens.
+  /** Dismiss the selections dialog. */
+  dismissButtonClicked() {
+    this.close();
+  }
+
+  /** Gets the value of the given item. */
+  getValue(i) {
+    return (typeof i === 'object') ? i[this.valueProperty] : i;
+  }
+
+  /**
+   * Filters the items based on the input text or checkbox state of the item.
+   * @param {Object} val Value used to filter data.
+   * @return {boolean} Decides whether to show the item or not.
+   * @private
+   */
+  _filter(val) {
+    return function (item, index, x) {
+      if (!val) {
+        return true;
+      } else {
+        var v = val.toLowerCase();
+        var i = this.getValue(item).toLowerCase();
+        return i.includes(v);
+      }
+    }.bind(this);
+  }
+
+  /**
+   * Updates the state of the checkbox on toggling.
+   * @param {Event} e Event that triggered this.
+   * @private
+   */
+  _checkboxToggled(e) {
+    const v = e.target.value.toLowerCase();
+    const arr = this.items.filter(x => this.getValue(x).toLowerCase() === v);
+    
+    if (arr.length == 0) {
+      return;  //unexpected !
+    }
+
+    const item = arr[0];
+    if (e.target.checked) {
+      this.push("selectedItems", item)
+    } else {
+      const i = this.selectedItems.indexOf(item);
+      if (i >= 0) {
+        this.splice("selectedItems", i, 1);
+      }
+    }
+  }
+
+  /**
+   * Check whether the passed item is selected or not.
+   * @param {Object} item The item to be checked.
+   * @return {boolean} Mark the active checkbox as checked or not.
+   * @private
+   */
+  _checkboxState(item) {
+    if (!this.selectedItems) {
+      this.selectedItems = [];
+    }
+    
+    if (this.selectedItems.length === 0) {
+      return false;
+    }
+
+    console.dir(this.selectedItems);
+    return this.selectedItems.indexOf(item) >= 0;
+  }
+
+  /**
+   * Handles keydown events.
+   * @param {Object} e The keydown event to be handled.
+   * @private
+   */
+  _onKeydown(e) {
+    if (IronA11yKeysBehavior.keyboardEventMatchesKeys(e,'enter')) {
+      // close dialog on 'enter'
+      this.close();
+    } else if (IronA11yKeysBehavior.keyboardEventMatchesKeys(e,'esc')) {
+      if (e.path[0].localName == 'input') {
+        // close the dialog when the user press 'escape' while focusing on the input field.
+        this.close();
+      } else {
+        if (e.path[0].localName == 'paper-checkbox') {
+          // focus on the filter field if the user is focusing on a checkbox
           this.$.filterField.focus();
         }
-
-        /** Closes the element. */
-        close() {
-          // do nothing if it is not opened.
-          if (!this.opened) return;
-
-          // fade-out the selections dialog.
-          this.$.dialog.style.opacity = 0;
-          this.opened = false;
-          
-          // fully hide the dialog when the fading animations end. 
-          Polymer.Async.timeOut.run(function() {
-            this.$.dialog.style.visibility = "hidden";
-          }.bind(this), this._animationDuration);
-        }
-
-        /** Retrieve the selected items. */
-        get value() {
-          return this.selectedItems;
-        }
-
-        /** Called every time the selected items changed to show or hide the placeholder. */
-        _onSelectedItemsChanged(selectedItems) {
-          if (selectedItems.length > 0) {
-            if (this.$.placeholder.style.display != 'none') {
-              this.$.placeholder.style.display = 'none';
-            }
-          } else {
-            if (this.$.placeholder.style.display == 'none') {
-              this.$.placeholder.style.display = 'block';
-            }
-          }
-        }
         
-        /** Toggles selections, e.i either selects all items or none. */
-        toggleButtonClicked() {
-          if (this.selectedItems.length === this.items.length) {
-            this.set("selectedItems", []);
-          } else {
-            this.set("selectedItems", this.items);
-          }
-
-          if (this.filterValue != "") {
-            this.filterValue = "";
-          } else {
-            // Reloads "dom-repeat".
-            // TODO: Improve code related to reloading 'dom-repeat'.
-            console.warn("Improve code related to reloading 'dom-repeat'.");
-            Polymer.Async.microTask.run(function() {
-              this.filterValue = "-";
-              Polymer.Async.microTask.run(function() {
-                this.filterValue = "";
-              }.bind(this));
-            }.bind(this));
-          }
-        }
-        
-        /** Dismiss the selections dialog. */
-        dismissButtonClicked() {
-          this.close();
-        }
-
-        /** Gets the value of the given item. */
-        getValue(i) {
-          return (typeof i === 'object') ? i[this.valueProperty] : i;
-        }
-        
-        /**
-         * Filters the items based on the input text or checkbox state of the item.
-         * @param {Object} val Value used to filter data.
-         * @return {boolean} Decides whether to show the item or not.
-         * @private
-         */
-        _filter(val) {
-          return function (item, index, x) {
-            if (!val) {
-              return true;
-            } else {
-              var v = val.toLowerCase();
-              var i = this.getValue(item).toLowerCase();
-              return i.includes(v);
-            }
-          }.bind(this);
-        }
-        
-        /**
-         * Updates the state of the checkbox on toggling.
-         * @param {Event} e Event that triggered this.
-         * @private
-         */
-        _checkboxToggled(e) {
-          const v = e.target.value.toLowerCase();
-          const arr = this.items.filter(x => this.getValue(x).toLowerCase() === v);
-          
-          if (arr.length == 0) {
-            return;  //unexpected !
-          }
-
-          const item = arr[0];
-          if (e.target.checked) {
-            this.push("selectedItems", item)
-          } else {
-            const i = this.selectedItems.indexOf(item);
-            if (i >= 0) {
-              this.splice("selectedItems", i, 1);
-            }
-          }
-        }
-
-        /**
-         * Check whether the passed item is selected or not.
-         * @param {Object} item The item to be checked.
-         * @return {boolean} Mark the active checkbox as checked or not.
-         * @private
-         */
-        _checkboxState(item) {
-          if (!this.selectedItems) {
-            this.selectedItems = [];
-          }
-          
-          if (this.selectedItems.length === 0) {
-            return false;
-          }
-
-          console.dir(this.selectedItems);
-          return this.selectedItems.indexOf(item) >= 0;
-        }
-        
-        /**
-         * Handles keydown events.
-         * @param {Object} e The keydown event to be handled.
-         * @private
-         */
-        _onKeydown(e) {
-          if (Polymer.IronA11yKeysBehavior.keyboardEventMatchesKeys(e,'enter')) {
-            // close dialog on 'enter'
-            this.close();
-          } else if (Polymer.IronA11yKeysBehavior.keyboardEventMatchesKeys(e,'esc')) {
-            if (e.path[0].localName == 'input') {
-              // close the dialog when the user press 'escape' while focusing on the input field.
-              this.close();
-            } else {
-              if (e.path[0].localName == 'paper-checkbox') {
-                // focus on the filter field if the user is focusing on a checkbox
-                this.$.filterField.focus();
-              }
-              
-              // reset filter value
-              this.filterValue = "";
-            }
-          }
-        }
+        // reset filter value
+        this.filterValue = "";
       }
+    }
+  }
+}
 
-      window.customElements.define(MCDMultiSelect.is, MCDMultiSelect);
-    </script>
-</dom-module>
+window.customElements.define(MCDMultiSelect.is, MCDMultiSelect);
